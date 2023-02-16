@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface ProductNumberRepository extends GenericRepository<ProductNumber, Integer>, JpaRepository<ProductNumber, Integer> {
 
     FrontEndRS<Product> getListProductCode() throws Exception;
+
+    FrontEndRS<Product> getListProduct(String region, String appId) throws Exception;
 }

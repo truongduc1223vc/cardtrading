@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -39,6 +40,35 @@ public class ProductNumberRepositoryImpl extends GenericRepositoryCustom impleme
             sqlSelect.append(" select pn.id as ID, pn.ProductId as ProductId, pn.ProductName as ProductName from productnumber pn;");
 //            sqlSelect.append(" from ProductNumber pn");
 //            sqlSelect.append(" order by rd.id desc");
+            List<Product> rs = new ArrayList<>();
+            Query query = entityManager.createNativeQuery(sqlSelect.toString(), Product.class);
+            query = setParametersByMap(query, mapParams);
+            rs = query.getResultList();
+            Integer total = 32;
+            Integer totalPage = 0;
+//			Integer totalPage = (total.intValue() % pageSize) == 0 ? total.intValue() / pageSize : total.intValue() / pageSize + 1;;
+            return new FrontEndRS(rs);
+        } catch (Exception ex) {
+//            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public FrontEndRS<Product> getListProduct(String region, String appId) throws Exception{
+        try {
+            HashMap<String, Object> mapParams = new HashMap<>();
+            StringBuilder sqlSelect = new StringBuilder();
+
+            sqlSelect.append(" select pn.id as ID, pn.ProductId as ProductId, pn.ProductName as ProductName from productnumber pn");
+            if (!StringUtils.isEmpty(appId)) {
+                sqlSelect.append(" where pn.AppId = :appId ");
+                mapParams.put("appId", appId);
+            }
+            if (!StringUtils.isEmpty(region)) {
+                sqlSelect.append(" and pn.region = :region");
+                mapParams.put("region", region);
+            }
             List<Product> rs = new ArrayList<>();
             Query query = entityManager.createNativeQuery(sqlSelect.toString(), Product.class);
             query = setParametersByMap(query, mapParams);

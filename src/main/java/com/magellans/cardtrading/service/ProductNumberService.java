@@ -11,4 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 public interface ProductNumberService extends GenericService<ProductNumber, Integer> {
     @Transactional
     FrontEndRS<Product> getListProductCode() throws Exception;
+
+    @Transactional
+    FrontEndRS<Product> getListProduct(String region, String appId) throws Exception;
 }

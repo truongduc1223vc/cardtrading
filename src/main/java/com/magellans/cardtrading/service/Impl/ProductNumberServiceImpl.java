@@ -21,6 +21,11 @@ public class ProductNumberServiceImpl extends GenericServiceImpl<ProductNumber, 
         return productNumberRepository.getListProductCode();
     }
 
+    @Override
+    public FrontEndRS<Product> getListProduct(String region, String appId) throws Exception{
+        return productNumberRepository.getListProduct(region, appId);
+    }
+
 
     @Override
     public ProductNumber create(ProductNumber productNumber) throws Exception {
