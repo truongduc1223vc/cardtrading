@@ -24,4 +24,10 @@ public class Product implements Serializable{
     private String ProductId;
     @Column(name = "PRODUCTNAME")
     private String ProductName;
+
+    @Column(name = "PRICE")
+    private Integer Price;
+
+    @Column(name = "CONTENT")
+    private String Content;
 }

@@ -60,7 +60,8 @@ public class ProductNumberRepositoryImpl extends GenericRepositoryCustom impleme
             HashMap<String, Object> mapParams = new HashMap<>();
             StringBuilder sqlSelect = new StringBuilder();
 
-            sqlSelect.append(" select pn.id as ID, pn.ProductId as ProductId, pn.ProductName as ProductName from productnumber pn");
+            sqlSelect.append(" select pn.id as ID, pn.ProductId as ProductId, pn.ProductName as ProductName," +
+                    "pn.Price as Price, pn.Content as Content from productnumber pn");
             if (!StringUtils.isEmpty(appId)) {
                 sqlSelect.append(" where pn.AppId = :appId ");
                 mapParams.put("appId", appId);
