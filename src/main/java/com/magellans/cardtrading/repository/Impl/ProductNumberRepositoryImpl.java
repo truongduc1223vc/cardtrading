@@ -5,8 +5,8 @@ import com.magellans.cardtrading.generic.jpa.Condition;
 import com.magellans.cardtrading.generic.jpa.DataPage;
 import com.magellans.cardtrading.generic.jpa.GenericRepositoryCustom;
 import com.magellans.cardtrading.repository.ProductNumberRepository;
-import com.magellans.cardtrading.resource.model.FrontEndRS;
-import com.magellans.cardtrading.resource.model.Product;
+import com.magellans.cardtrading.resource.model.*;
+import com.magellans.cardtrading.utils.ConvertUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -21,6 +21,9 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.metamodel.SingularAttribute;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 @Repository("ProductNumberRepository")
@@ -53,6 +56,69 @@ public class ProductNumberRepositoryImpl extends GenericRepositoryCustom impleme
             throw ex;
         }
     }
+    @Override
+    public void updateDeal(String date) throws Exception {
+        try {
+            HashMap<String, Object> params = new HashMap<>();
+            StringBuilder sql = new StringBuilder();
+            sql.append(" update orderdetail set AccectOrder = :unaccectOrder where CAST(DateCreated as DATE) = :date and AccectOrder = :accectOrder");
+            params.put("accectOrder", CardConfig.accectOrder);
+            params.put("unaccectOrder", CardConfig.unAccectOrder);
+            params.put("date", date);
+            Query query = entityManager.createNativeQuery(sql.toString(), OrderDetail.class);
+            query = setParametersByMap(query, params);
+            query.executeUpdate();
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+    @Override
+    public FrontEndRS<OrderDetail> selectByAccountAndDateAndLinkId(String deviceId, LocalDate date, String idProduct, String appId) throws Exception {
+        try {
+            HashMap<String, Object> mapParams = new HashMap<>();
+            StringBuilder sqlSelect = new StringBuilder();
+
+            sqlSelect.append(" select id, ProductId as ProductId, AppId as AppId, BuyDate as BuyDate, DeviceId as DeviceId, AccectOrder as AccectOrder");
+            sqlSelect.append(" from orderdetail where ProductId = :productId and AppId= :appId and CAST(BuyDate as DATE) = :date and AccectOrder = :accectOrder and DeviceId = :deviceId" );
+            mapParams.put("productId", idProduct);
+            mapParams.put("appId", appId);
+            mapParams.put("date", date);
+            mapParams.put("deviceId", deviceId);
+            mapParams.put("accectOrder", 1);
+            List<OrderDetail> rs = new ArrayList<>();
+            Query query = entityManager.createNativeQuery(sqlSelect.toString(), OrderDetail.class);
+            query = setParametersByMap(query, mapParams);
+            rs = query.getResultList();
+            return new FrontEndRS(rs);
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+
+    @Override
+    public void createDeal(String deviceId, String idProduct, String appId) throws  Exception{
+        try {
+            ZoneId vietnam = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDateTime fullVietNam = LocalDateTime.now(vietnam);
+            HashMap<String, Object> mapParams = new HashMap<>();
+            StringBuilder sqlSelect = new StringBuilder();
+            sqlSelect.append(" insert into orderdetail( ProductId, AppId, BuyDate, DeviceId, AccectOrder)");
+            sqlSelect.append(" values (:idProduct, :appId, :buyDate, :deviceId, :accectOrder);");
+            mapParams.put("idProduct", idProduct);
+            mapParams.put("appId", appId);
+            mapParams.put("buyDate", fullVietNam);
+            mapParams.put("deviceId", deviceId);
+            mapParams.put("accectOrder", 1);
+            Query query = entityManager.createNativeQuery(sqlSelect.toString(), OrderDetail.class);
+            query = setParametersByMap(query, mapParams);
+            query.executeUpdate();
+        } catch (Exception ex) {
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
 
     @Override
     public FrontEndRS<Product> getListProduct(String region, String appId) throws Exception{
@@ -72,6 +138,56 @@ public class ProductNumberRepositoryImpl extends GenericRepositoryCustom impleme
             }
             List<Product> rs = new ArrayList<>();
             Query query = entityManager.createNativeQuery(sqlSelect.toString(), Product.class);
+            query = setParametersByMap(query, mapParams);
+            rs = query.getResultList();
+            Integer total = 32;
+            Integer totalPage = 0;
+//			Integer totalPage = (total.intValue() % pageSize) == 0 ? total.intValue() / pageSize : total.intValue() / pageSize + 1;;
+            return new FrontEndRS(rs);
+        } catch (Exception ex) {
+//            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+    }
+    @Override
+    public List<OrderDetail> dealOfYesterday()throws Exception{
+        try{
+            LocalDate today = LocalDate.now();
+            String date = today.toString();
+            List<OrderDetail> dealNumbers = new ArrayList<>();
+            HashMap<String, Object> mapParams = new HashMap<>();
+            StringBuilder sqlSelect = new StringBuilder();
+
+            sqlSelect.append(" select id, ProductId as ProductId, AppId as AppId, BuyDate as BuyDate, DeviceId as DeviceId, AccectOrder as AccectOrder");
+            sqlSelect.append(" from orderdetail where CAST(BuyDate as DATE) = :date and AccectOrder= :accectOrder" );
+            mapParams.put("date", date);
+            mapParams.put("accectOrder", CardConfig.accectOrder);
+//			List<ProductCode> rs = new ArrayList<>();
+            Query query = entityManager.createNativeQuery(sqlSelect.toString(), OrderDetail.class);
+            query = setParametersByMap(query, mapParams);
+            dealNumbers = query.getResultList();
+            return dealNumbers;
+        }
+        catch (Exception ex){
+            log.error(ex.getMessage(), ex);
+            throw ex;
+        }
+
+    }
+    @Override
+    public FrontEndRS<ProductDetail> getProductDetail(String idProduct) throws Exception{
+        try {
+            HashMap<String, Object> mapParams = new HashMap<>();
+            StringBuilder sqlSelect = new StringBuilder();
+
+            sqlSelect.append(" select pd.id as ID, pd.ProductId as ProductId, pd.Content as Content," +
+                    "pd.DateProduct as DateProduct, pd.Result as Result from productdetail pd");
+            if (!StringUtils.isEmpty(idProduct)) {
+                sqlSelect.append(" where pd.ProductId = :idProduct ");
+                mapParams.put("idProduct", idProduct);
+            }
+            List<ProductDetail> rs = new ArrayList<>();
+            Query query = entityManager.createNativeQuery(sqlSelect.toString(), ProductDetail.class);
             query = setParametersByMap(query, mapParams);
             rs = query.getResultList();
             Integer total = 32;

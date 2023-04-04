@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Builder
 @Entity
@@ -14,7 +15,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ProductDetail implements Serializable{
+public class OrderDetail implements Serializable{
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,12 +23,15 @@ public class ProductDetail implements Serializable{
     private Integer id;
     @Column(name = "PRODUCTID")
     private String ProductId;
-    @Column(name = "CONTENT")
-    private String Content;
+    @Column(name = "APPID")
+    private String AppId;
 
-    @Column(name = "DATEPRODUCT")
-    private String DateProduct;
+    @Column(name = "BUYDATE")
+    private LocalDate BuyDate;
 
-    @Column(name = "RESULT")
-    private String Result;
+    @Column(name = "DEVICEID")
+    private String DeviceId;
+
+    @Column(name = "ACCECTORDER")
+    private Integer AccectOrder;
 }

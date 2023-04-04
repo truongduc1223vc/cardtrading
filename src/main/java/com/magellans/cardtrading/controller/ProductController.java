@@ -11,6 +11,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,10 +27,10 @@ public class ProductController {
 
     //Get history
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
-    public ResponseEntity getInforCard(@RequestParam(name = "idProdcuct", required = true) String region) {
+    public ResponseEntity getInforCard(@RequestParam(name = "idProdcuct", required = true) String idProdcuct) {
         try {
 
-            FrontEndRS frontEndRS = productNumberService.getListProductCode();
+            FrontEndRS frontEndRS = productNumberService.getProductDetail(idProdcuct);
             return ResponseEntity.ok(frontEndRS);
         } catch (Exception e) {
             return Response.exception(e);
@@ -62,14 +65,28 @@ public class ProductController {
     }
 
     @PostMapping("/deal")
-    public ResponseEntity<?> deal(@RequestParam(name = "region", required = true) String region
-            , @RequestHeader(PARAM_AUTHORIZATION) String token
-            ,@RequestParam(name = "id", required = true) String idProduct
+    public ResponseEntity<?> deal(@RequestParam(name = "deviceId", required = true) String deviceId
+            ,@RequestParam(name = "idProduct", required = true) String idProduct
             , @RequestParam(name = "appId", required = false) String appId) {
         try {
 
+            Boolean rs = productNumberService.createDeal(deviceId,idProduct, appId );
+            return ResponseEntity.ok(rs);
+        } catch (Exception e) {
+            //			e.printStackTrace();
+            return Response.exception(e);
+        }
+    }
 
-            return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    @RequestMapping(value = "/check", method = RequestMethod.GET)
+    public ResponseEntity<?> checkOrder(@RequestParam(name = "deviceId", required = true) String deviceId
+            ,@RequestParam(name = "idProduct", required = true) String idProduct
+            , @RequestParam(name = "appId", required = false) String appId) {
+        try {
+            ZoneId vietnam = ZoneId.of("Asia/Ho_Chi_Minh");
+            LocalDate fullVietNam = LocalDate.now(vietnam);
+            Boolean rs = productNumberService.countDeal(deviceId,fullVietNam ,idProduct, appId );
+            return ResponseEntity.ok(rs);
         } catch (Exception e) {
             //			e.printStackTrace();
             return Response.exception(e);
